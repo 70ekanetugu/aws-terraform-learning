@@ -3,3 +3,8 @@
 .terraform/
 
 */.env
+
+*.tfstate.lock.info
+*.tfstate
+*.tfstate.backup
+*.tfvars
