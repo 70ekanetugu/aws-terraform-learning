@@ -3,3 +3,6 @@
 .terraform/
 
 */.env
+
+*.tfstate
+*.tfstate.backup
