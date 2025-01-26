@@ -1,4 +1,9 @@
-variable "vpc_id" {}
+variable "vpc_id" {
+  type        = string
+  description = "Id of VPC"
+}
+
 variable "igw_id" {
-  description = "ゲートウェイのID"
+  type        = string
+  description = "Id of IGW"
 }

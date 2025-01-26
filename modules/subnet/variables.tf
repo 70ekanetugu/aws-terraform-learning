@@ -1,16 +1,23 @@
 # vpcのid
-variable "vpc_id" {}
-# publicサブネットの場合trueにする。デフォルトはfalse(=private)
+variable "vpc_id" {
+  type        = string
+  description = "Id of vpc"
+}
+
 variable "is_public" {
-  default = false
+  type        = bool
+  description = "Set to true if the subnet should be public, false otherwise."
+  default     = false
 }
-# 柵ネットを作成するAZ一覧。
+
 variable "availability_zones" {
-  type    = list(string)
-  default = ["ap-northeast-1a"]
+  type        = list(string)
+  description = "List of availability zones where subnets will be created."
+  default     = ["ap-northeast-1a"]
 }
-# tagのNameキーの値
+
 variable "tag_name" {
-  type    = string
-  default = "example-subnet"
+  type        = string
+  description = "Value of Name tag."
+  default     = "example-subnet"
 }
