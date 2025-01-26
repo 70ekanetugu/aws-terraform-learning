@@ -10,7 +10,7 @@ module "http_sg" {
 }
 
 module "ssh_sg" {
-  source = "./modules/security_group" 
+  source = "./modules/security_group"
 
   name        = "example-ssh-sg"
   vpc_id      = aws_vpc.default.id

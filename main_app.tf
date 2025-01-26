@@ -9,7 +9,7 @@ data "aws_ami" "amzn_linux_2023" {
 }
 
 resource "aws_key_pair" "ssh" {
-  key_name = "ec2-pub-key"
+  key_name   = "ec2-pub-key"
   public_key = var.ssh_pub_key
 }
 
@@ -18,7 +18,7 @@ resource "aws_instance" "httpd" {
   instance_type          = "t2.nano"
   subnet_id              = module.private_subnets.ids[0]
   vpc_security_group_ids = [module.http_sg.id]
-  key_name = aws_key_pair.ssh.key_name
+  key_name               = aws_key_pair.ssh.key_name
 
   user_data = file("ec2_init.sh")
 
