@@ -26,6 +26,7 @@ variable "target_group_name" {
 variable "target_type" {
   type        = string
   description = "Specifies the type of target that requests are routed to. Valid values are 'instance' for EC2 instances, 'ip' for direct IP addresses, or 'lambda' for AWS Lambda functions."
+  default     = "instance"
 }
 
 variable "protocol" {
@@ -55,7 +56,7 @@ variable "is_internal" {
 variable "enable_deletion_protection" {
   type        = bool
   description = "Enables or disables deletion protection on the ALB. When set to true, the ALB cannot be deleted unless this setting is turned off."
-  default     = true
+  default     = false
 }
 
 variable "log_bucket_id" {

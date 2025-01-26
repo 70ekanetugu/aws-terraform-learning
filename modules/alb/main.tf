@@ -62,7 +62,7 @@ resource "aws_lb_listener_rule" "default" {
 
   condition {
     path_pattern {
-      values = ["/app/*"]
+      values = ["/*"]
     }
   }
 }
