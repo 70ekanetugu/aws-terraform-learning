@@ -83,11 +83,15 @@ terraform plan
 
 ## 実行
 ```shell
-terraform apply
+terraform apply [-var-file="terraform.tfvarsのパス"]
 ```
 実際にaws上に適用するためのコマンド。
 `*.tf` の内容を変更して、AWSリソースの設定を更新する場合もこのコマンドを使う。
 このコマンドを実行すると実際にAWS上にリソースが作成・更新・削除されるため注意。
+
+オプションの-var-fileで入力を渡すこともできる。  
+なお、ルートのterraform.tfvarsは無条件で読み込まれるため指定は不要。
+environments/dev/terraform.tfvarsのように環境に応じた入力を用意する場合などで使用することが多い。
 
 ## リソース削除
 ```shell
