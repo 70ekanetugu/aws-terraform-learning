@@ -28,7 +28,7 @@ RUN apt-get update -y && \
     echo '1: plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"' && \
     mkdir -p $HOME/.terraform.d/plugin-cache
 
-WORKDIR /workspace
+WORKDIR /workspaces
 
 COPY .terraform-version ./
 COPY .tflint.hcl ./
