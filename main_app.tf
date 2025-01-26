@@ -20,7 +20,7 @@ resource "aws_instance" "httpd" {
   vpc_security_group_ids = [module.http_sg.id]
   key_name = aws_key_pair.ssh.key_name
 
-  user_data = file("init.sh")
+  user_data = file("ec2_init.sh")
 
   tags = {
     Name = "example-httpd-1a"
