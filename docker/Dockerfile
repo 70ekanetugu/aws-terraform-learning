@@ -10,7 +10,7 @@ WORKDIR /usr/local/src
 
 RUN apt-get update -y && \
     # curl, unzip, jq: インストールに必要, less: aws-cliコマンドで必要
-    apt-get install -y curl unzip jq less git && \
+    apt-get install -y curl unzip jq less git mandoc && \
     # aws-cliインストール
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
