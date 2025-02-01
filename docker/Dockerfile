@@ -25,7 +25,7 @@ RUN apt-get update -y && \
     # tflintインストール
     curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash && \
     # terraform各プロバイダのバイナリファイルキャッシュ設定・置き場の作成
-    echo '1: plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"' && \
+    echo 'plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"' > > $HOME/.terraformrc && \
     mkdir -p $HOME/.terraform.d/plugin-cache
 
 WORKDIR /workspaces
