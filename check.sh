@@ -1,5 +1,6 @@
 #!/bin/sh
 
+cd `dirname $0`
 echo "[Start]: terraform format"
 terraform fmt --recursive
 echo "\e[1;34mCompleted\e[0m format\n"
@@ -11,6 +12,7 @@ if [ $? -ne 0 ]; then
     echo "Validation failed"
     exit 1
 fi
+
 
 echo "[Start]: tflint"
 tflint --config "$(pwd)/.tflint.hcl" --recursive
