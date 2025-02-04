@@ -1,5 +1,6 @@
 resource "aws_ecr_repository" "demo_web" {
-  name = "terraform-demo-web"
+  name         = "terraform-demo-web"
+  force_delete = true
 
   tags = {
     Name = "terraform-demo"
@@ -31,7 +32,8 @@ resource "aws_ecr_lifecycle_policy" "demo_web" {
 }
 
 resource "aws_ecr_repository" "demo_ap" {
-  name = "terraform-demo-ap"
+  name         = "terraform-demo-ap"
+  force_delete = true
 
   tags = {
     Name = "terraform-demo"
