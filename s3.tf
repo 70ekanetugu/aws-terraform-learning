@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "alb_log" {
     effect    = "Allow"
     actions   = ["s3:PutObject"]
     resources = ["arn:aws:s3:::${aws_s3_bucket.alb_log.id}/*"]
-    
+
     principals {
       type        = "AWS"
       identifiers = ["582318560864"] # ALBのアカウントID
