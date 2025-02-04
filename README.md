@@ -47,7 +47,13 @@ tflint | terraform用のLinter
     ```shell
     terraform init
     ```
+1. pre-commitの初期化
+    ```shell
+    pre-commit install
 
+    # 手動チェック：全部Passedになることを確認
+    pre-commit run -a
+    ```
 
 # 基本的な使い方
 ## フォーマット
