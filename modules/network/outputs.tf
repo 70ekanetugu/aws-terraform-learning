@@ -18,6 +18,11 @@ output "vpc_arn" {
   value       = aws_vpc.demo.arn
 }
 
+output "vpc_cidr_block" {
+  description = "VPC cidr block"
+  value       = aws_vpc.demo.cidr_block
+}
+
 output "vpc_id" {
   description = "Id of VPC"
   value       = aws_vpc.demo.id
