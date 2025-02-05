@@ -30,6 +30,6 @@ variable "sg_name" {
 }
 
 variable "vpc_id" {
-  type    = string
-  default = "Id of VPC"
+  type        = string
+  description = "Id of VPC"
 }
