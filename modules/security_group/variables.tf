@@ -2,7 +2,7 @@ variable "ingress_port_and_protocol" {
   description = "Ingress port and protocol pairs. Port that allow TCP, UDP port number. Protocol is 'tcp', 'udp', '-1'."
   type        = list(map(string))
   # default = [{
-  #   port = "0" 
+  #   port = "-1" 
   #   protocol = "-1"
   # }]
 }
