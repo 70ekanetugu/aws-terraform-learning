@@ -31,8 +31,11 @@ tflint | terraform用のLinter
     # aws-cliの確認
     aws --version
 
-    # アカウントIDが表示されることを確認
+    # アカウントIDが表示されることを確認(「The Session Manager plugin was installed successfully. Use the AWS CLI to start a session.」が表示される)
     aws sts get-caller-identity --query Account --output text
+
+    # SessionManager Pluginの確認
+    session-manager-plugin
 
     # tenvの確認
     tenv --version
@@ -47,7 +50,13 @@ tflint | terraform用のLinter
     ```shell
     terraform init
     ```
+1. pre-commitの初期化
+    ```shell
+    pre-commit install
 
+    # 手動チェック：全部Passedになることを確認
+    pre-commit run -a
+    ```
 
 # 基本的な使い方
 ## フォーマット
