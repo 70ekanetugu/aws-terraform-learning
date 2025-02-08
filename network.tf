@@ -1,8 +1,21 @@
+locals {
+  cidr_blocks = {
+    vpc           = "10.0.0.0/16"
+    public_1a     = "10.0.1.0/24"
+    public_1c     = "10.0.2.0/24"
+    private_ap_1a = "10.0.3.0/24"
+    private_ap_1c = "10.0.4.0/24"
+    private_db_1a = "10.0.5.0/24"
+    private_db_1c = "10.0.6.0/24"
+    private_ep_1a = "10.0.7.0/24"
+    private_ep_1c = "10.0.8.0/24"
+  }
+}
 # ===================================================================================
 # VPC
 # ===================================================================================
 resource "aws_vpc" "demo" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = local.cidr_blocks["vpc"]
   enable_dns_hostnames = true
   enable_dns_support   = true
 
@@ -24,7 +37,7 @@ resource "aws_internet_gateway" "igw" {
 # publicサブネット
 resource "aws_subnet" "public_1a" {
   vpc_id                  = aws_vpc.demo.id
-  cidr_block              = "10.0.1.0/24"
+  cidr_block              = local.cidr_blocks["public_1a"]
   availability_zone       = "ap-northeast-1a"
   map_public_ip_on_launch = true
 
@@ -34,7 +47,7 @@ resource "aws_subnet" "public_1a" {
 }
 resource "aws_subnet" "public_1c" {
   vpc_id                  = aws_vpc.demo.id
-  cidr_block              = "10.0.2.0/24"
+  cidr_block              = local.cidr_blocks["public_1c"]
   availability_zone       = "ap-northeast-1c"
   map_public_ip_on_launch = true
 
@@ -42,23 +55,63 @@ resource "aws_subnet" "public_1c" {
     Name = "demo-public-subnet-1c"
   }
 }
-# privateサブネット
-resource "aws_subnet" "private_1a" {
+# private(AP)サブネット
+resource "aws_subnet" "private_ap_1a" {
   vpc_id            = aws_vpc.demo.id
-  cidr_block        = "10.0.3.0/24"
+  cidr_block        = local.cidr_blocks["private_ap_1a"]
   availability_zone = "ap-northeast-1a"
 
   tags = {
-    Name = "demo-private-subnet-1a"
+    Name = "demo-private-ap-subnet-1a"
   }
 }
-resource "aws_subnet" "private_1c" {
+resource "aws_subnet" "private_ap_1c" {
   vpc_id            = aws_vpc.demo.id
-  cidr_block        = "10.0.4.0/24"
+  cidr_block        = local.cidr_blocks["private_ap_1c"]
   availability_zone = "ap-northeast-1c"
 
   tags = {
-    Name = "demo-private-subnet-1c"
+    Name = "demo-private-ap-subnet-1c"
+  }
+}
+
+# private(DB)サブネット
+resource "aws_subnet" "private_db_1a" {
+  vpc_id            = aws_vpc.demo.id
+  cidr_block        = local.cidr_blocks["private_db_1a"]
+  availability_zone = "ap-northeast-1a"
+
+  tags = {
+    Name = "demo-private-db-subnet-1a"
+  }
+}
+resource "aws_subnet" "private_db_1c" {
+  vpc_id            = aws_vpc.demo.id
+  cidr_block        = local.cidr_blocks["private_db_1c"]
+  availability_zone = "ap-northeast-1c"
+
+  tags = {
+    Name = "demo-private-db-subnet-1c"
+  }
+}
+
+# VPCエンドポイント用
+resource "aws_subnet" "private_ep_1a" {
+  vpc_id            = aws_vpc.demo.id
+  cidr_block        = local.cidr_blocks["private_ep_1a"]
+  availability_zone = "ap-northeast-1a"
+
+  tags = {
+    Name = "demo-private-ep-subnet-1a"
+  }
+}
+resource "aws_subnet" "private_ep_1c" {
+  vpc_id            = aws_vpc.demo.id
+  cidr_block        = local.cidr_blocks["private_ep_1c"]
+  availability_zone = "ap-northeast-1c"
+
+  tags = {
+    Name = "demo-private-ep-subnet-1c"
   }
 }
 
@@ -82,17 +135,17 @@ resource "aws_route_table_association" "public_1c" {
   route_table_id = aws_route_table.public.id
   subnet_id      = aws_subnet.public_1c.id
 }
-# private用のルートテーブル (※ローカルルートはデフォルトで作られるのでprivateサブネットについてaws_routeの設定は不要))
-resource "aws_route_table" "private" {
+# private(AP)用のルートテーブル (※ローカルルートはデフォルトで作られるのでprivateサブネットについてaws_routeの設定は不要))
+resource "aws_route_table" "private_ap" {
   vpc_id = aws_vpc.demo.id
 }
-resource "aws_route_table_association" "private_1a" {
-  route_table_id = aws_route_table.private.id
-  subnet_id      = aws_subnet.private_1a.id
+resource "aws_route_table_association" "private_ap_1a" {
+  route_table_id = aws_route_table.private_ap.id
+  subnet_id      = aws_subnet.private_ap_1a.id
 }
-resource "aws_route_table_association" "private_1c" {
-  route_table_id = aws_route_table.private.id
-  subnet_id      = aws_subnet.private_1c.id
+resource "aws_route_table_association" "private_ap_1c" {
+  route_table_id = aws_route_table.private_ap.id
+  subnet_id      = aws_subnet.private_ap_1c.id
 }
 
 # ===================================================================================
