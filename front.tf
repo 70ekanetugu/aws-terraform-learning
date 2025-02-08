@@ -1,33 +1,4 @@
 # ===========================================================================
-# Nginx用のクラスタ
-# ===========================================================================
-# resource "aws_ecs_cluster" "front" {
-#   name = "demo-front"
-
-#   tags = {
-#     Name = "demo-front"
-#   }
-# }
-
-# resource "aws_ecs_task_definition" "front" {
-#   cpu = 256
-#   family = ""
-#   container_definitions = <<JSON
-#   [
-#     {
-#       "": ""
-#     }
-#   ]
-#   JSON
-# }
-# resource "aws_ecs_service" "front" {
-#   name = "demo-front-service"
-# }
-# resource "aws_ecs" "name" {
-
-# }
-
-# ===========================================================================
 # ALB
 # ===========================================================================
 resource "aws_lb" "front" {
@@ -49,6 +20,10 @@ resource "aws_lb" "front" {
   security_groups = [
     module.public_alb_sg.security_group_id
   ]
+
+  tags = {
+    Name = "demo-front-alb"
+  }
 }
 resource "aws_lb_listener" "front" {
   load_balancer_arn = aws_lb.front.arn
@@ -106,5 +81,67 @@ resource "aws_lb_listener_rule" "front" {
     path_pattern {
       values = ["/*"]
     }
+  }
+}
+
+# ===========================================================================
+# Nginx用のクラスタ
+# ===========================================================================
+resource "aws_ecs_cluster" "front" {
+  name = "demo-front"
+
+  tags = {
+    Name = "demo-front"
+  }
+}
+resource "aws_ecs_task_definition" "front" {
+  family                   = "demo-front"
+  cpu                      = 256
+  memory                   = 512
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  container_definitions    = <<JSON
+  [
+    {
+      "name": "demo-front",
+      "image": "nginx:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "protocol": "tcp",
+          "containerPort": 80
+        }
+      ]
+    }
+  ]
+  JSON
+}
+resource "aws_ecs_service" "front" {
+  name                              = "demo-front-service"
+  cluster                           = aws_ecs_cluster.front.arn
+  task_definition                   = aws_ecs_task_definition.front.arn
+  desired_count                     = 2
+  launch_type                       = "FARGATE"
+  platform_version                  = "1.4.0"
+  health_check_grace_period_seconds = 30
+
+  network_configuration {
+    assign_public_ip = false
+    security_groups  = [module.private_front_ap.security_group_id]
+
+    subnets = [
+      aws_subnet.private_ap_1a.id,
+      aws_subnet.private_ap_1c.id
+    ]
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.front.arn
+    container_name   = "demo-front"
+    container_port   = 80
+  }
+
+  lifecycle {
+    ignore_changes = [task_definition]
   }
 }

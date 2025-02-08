@@ -42,11 +42,26 @@ module "private_alb_sg" {
     cidr_ipv4 = "0.0.0.0/0"
   }
 }
-
-# アプリケーション(private)用。 ALB(private)からのみ許可する。
-module "private_ap" {
+# frontendアプリケーション(private)用。ALB(public)からのみ許可する。
+module "private_front_ap" {
   source = "./modules/security_group"
-  name   = "demo-private-ap"
+  name   = "demo-private-front-ap"
+  vpc_id = aws_vpc.demo.id
+  ingress_port_and_protocol = [
+    {
+      port     = "80"
+      protocol = "tcp"
+    }
+  ]
+  ingress_source = {
+    referenced_sg_id = module.public_alb_sg.security_group_id
+  }
+}
+
+# backendアプリケーション(private)用。 ALB(private)からのみ許可する。
+module "private_backend_ap" {
+  source = "./modules/security_group"
+  name   = "demo-private-backend-ap"
   vpc_id = aws_vpc.demo.id
   ingress_port_and_protocol = [
     {
