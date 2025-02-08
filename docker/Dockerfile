@@ -19,6 +19,9 @@ RUN apt-get update -y && \
     aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID} --profile ${AWS_PROFILE} && \
     aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY} --profile ${AWS_PROFILE} && \
     aws configure set region ${AWS_DEFAULT_REGION} --profile ${AWS_PROFILE} && \
+    # SessionManager Plugin
+    curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb" && \
+    dpkg -i session-manager-plugin.deb && \
     # tenvインストール
     TAG_VERSION=${TENV_VERSION:-$(curl --silent https://api.github.com/repos/tofuutils/tenv/releases/latest | jq -r .tag_name)} && \
     curl -O -L "https://github.com/tofuutils/tenv/releases/download/${TAG_VERSION}/tenv_${TAG_VERSION}_amd64.deb" && \
