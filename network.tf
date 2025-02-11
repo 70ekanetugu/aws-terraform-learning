@@ -136,83 +136,95 @@ resource "aws_route_table_association" "public_1c" {
   subnet_id      = aws_subnet.public_1c.id
 }
 # private(AP)用のルートテーブル (※ローカルルートはデフォルトで作られるのでprivateサブネットについてaws_routeの設定は不要))
-resource "aws_route_table" "private_ap" {
+# resource "aws_route_table" "private_ap" {
+#   vpc_id = aws_vpc.demo.id
+# }
+# resource "aws_route_table_association" "private_ap_1a" {
+#   route_table_id = aws_route_table.private_ap.id
+#   subnet_id      = aws_subnet.private_ap_1a.id
+# }
+# resource "aws_route_table_association" "private_ap_1c" {
+#   route_table_id = aws_route_table.private_ap.id
+#   subnet_id      = aws_subnet.private_ap_1c.id
+# }
+# private(ep)用のルートテーブル。
+resource "aws_route_table" "private_ep" {
   vpc_id = aws_vpc.demo.id
 }
-resource "aws_route_table_association" "private_ap_1a" {
-  route_table_id = aws_route_table.private_ap.id
-  subnet_id      = aws_subnet.private_ap_1a.id
+resource "aws_route_table_association" "private_ep_1a" {
+  route_table_id = aws_route_table.private_ep.id
+  subnet_id      = aws_subnet.private_ep_1a.id
 }
-resource "aws_route_table_association" "private_ap_1c" {
-  route_table_id = aws_route_table.private_ap.id
-  subnet_id      = aws_subnet.private_ap_1c.id
+resource "aws_route_table_association" "private_ep_1c" {
+  route_table_id = aws_route_table.private_ep.id
+  subnet_id      = aws_subnet.private_ep_1c.id
 }
 
 # ===================================================================================
-# NAT ：ここでは使用しないのでコメントアウトしておくが、NATを使う場合は以下の設定が必要。 
+# NAT ：
 # ===================================================================================
 # NATを使う場合EIPを別で用意する必要がある。
-# resource "aws_eip" "ngw_1a" {
-#   domain = "vpc"
+resource "aws_eip" "ngw_1a" {
+  domain = "vpc"
 
-#   tags = {
-#     Name = "demo-eip-ngw-1a"  
-#   }
+  tags = {
+    Name = "demo-eip-ngw-1a"
+  }
 
-#   depends_on = [ aws_internet_gateway.igw ]
-# }
-# resource "aws_eip" "ngw_1c" {
-#   domain = "vpc"
+  depends_on = [aws_internet_gateway.igw]
+}
+resource "aws_eip" "ngw_1c" {
+  domain = "vpc"
 
-#   tags = {
-#     Name = "demo-eip-ngw-1c"  
-#   }
+  tags = {
+    Name = "demo-eip-ngw-1c"
+  }
 
-#   depends_on = [ aws_internet_gateway.igw ]
-# }
-# # NATはAZごとに置くのが普通。
-# resource "aws_nat_gateway" "ngw_1a" {
-#     allocation_id = aws_eip.ngw_1a.id
-#     subnet_id = aws_subnet.public_1a.id
+  depends_on = [aws_internet_gateway.igw]
+}
+# NATはAZごとに置くのが普通。
+resource "aws_nat_gateway" "ngw_1a" {
+  allocation_id = aws_eip.ngw_1a.id
+  subnet_id     = aws_subnet.public_1a.id
 
-#     tags = {
-#       Name = "demo-ngw-1a"
-#     }
+  tags = {
+    Name = "demo-ngw-1a"
+  }
 
-#     depends_on = [ aws_internet_gateway.igw ]
-# }
-# resource "aws_nat_gateway" "ngw_1c" {
-#     allocation_id = aws_eip.ngw_1c.id
-#     subnet_id = aws_subnet.public_1c.id
+  depends_on = [aws_internet_gateway.igw]
+}
+resource "aws_nat_gateway" "ngw_1c" {
+  allocation_id = aws_eip.ngw_1c.id
+  subnet_id     = aws_subnet.public_1c.id
 
-#     tags = {
-#       Name = "demo-ngw-1c"
-#     }
+  tags = {
+    Name = "demo-ngw-1c"
+  }
 
-#     depends_on = [ aws_internet_gateway.igw ]
-# }
-# # デフォルトルートはルートテーブル1つにつき1つまでしか定義できないため、NATを使う場合はAZごとに作る必要がある。
-# resource "aws_route_table" "private_1a" {
-#   vpc_id = aws_vpc.demo.id
-# }
-# resource "aws_route_table" "private_1c" {
-#   vpc_id = aws_vpc.demo.id
-# }
-# resource "aws_route" "private_1a" {
-#   route_table_id = aws_route_table.private_1a.id
-#   nat_gateway_id = aws_nat_gateway.ngw_1a.id
-#   destination_cidr_block = "0.0.0.0/0"
-# }
-# resource "aws_route" "private_1c" {
-#   route_table_id = aws_route_table.private_1c.id
-#   nat_gateway_id = aws_nat_gateway.ngw_1c.id
-#   destination_cidr_block = "0.0.0.0/0"
-# }
-# resource "aws_route_table_association" "private_1a" {
-#   subnet_id = aws_subnet.private_1a.id
-#   route_table_id = aws_route_table.private_1a.id
-# }
-# resource "aws_route_table_association" "private_1c" {
-#   subnet_id = aws_subnet.private_1c.id
-#   route_table_id = aws_route_table.private_1c.id
-# }
+  depends_on = [aws_internet_gateway.igw]
+}
+# デフォルトルートはルートテーブル1つにつき1つまでしか定義できないため、NATを使う場合はAZごとに作る必要がある。
+resource "aws_route_table" "private_ap_1a" {
+  vpc_id = aws_vpc.demo.id
+}
+resource "aws_route_table" "private_ap_1c" {
+  vpc_id = aws_vpc.demo.id
+}
+resource "aws_route" "private_1a" {
+  route_table_id         = aws_route_table.private_ap_1a.id
+  nat_gateway_id         = aws_nat_gateway.ngw_1a.id
+  destination_cidr_block = "0.0.0.0/0"
+}
+resource "aws_route" "private_1c" {
+  route_table_id         = aws_route_table.private_ap_1c.id
+  nat_gateway_id         = aws_nat_gateway.ngw_1c.id
+  destination_cidr_block = "0.0.0.0/0"
+}
+resource "aws_route_table_association" "private_ap_1a" {
+  subnet_id      = aws_subnet.private_ap_1a.id
+  route_table_id = aws_route_table.private_ap_1a.id
+}
+resource "aws_route_table_association" "private_ap_1c" {
+  subnet_id      = aws_subnet.private_ap_1c.id
+  route_table_id = aws_route_table.private_ap_1c.id
+}
