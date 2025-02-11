@@ -100,7 +100,7 @@ resource "aws_ecs_task_definition" "front" {
   [
     {
       "name": "demo-front",
-      "image": "nginx:latest",
+      "image": "521825925159.dkr.ecr.ap-northeast-1.amazonaws.com/demo-front:v1",
       "essential": true,
       "logConfiguration": {
         "logDriver": "awslogs",
@@ -114,6 +114,24 @@ resource "aws_ecs_task_definition" "front" {
         {
           "protocol": "tcp",
           "containerPort": 80
+        }
+      ],
+      "environment": [
+        {
+          "name": "NGINX_HOST",
+          "value": "127.0.0.1"
+        },
+        {
+          "name": "NGINX_PORT",
+          "value": "80"
+        },
+        {
+          "name": "PROXY_PASS_HOST",
+          "value": "${aws_lb.backend.dns_name}"
+        },
+        {
+          "name": "PROXY_PASS_PORT",
+          "value": "8080"
         }
       ]
     }
