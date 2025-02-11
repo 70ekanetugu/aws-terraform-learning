@@ -9,4 +9,7 @@ terraform {
       version = "~> 5.0"
     }
   }
+  # 設定は${env}.tfbackendに移譲
+  backend "s3" {
+  }
 }
