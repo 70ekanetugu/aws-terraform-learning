@@ -51,6 +51,10 @@ module "private_front_ap" {
     {
       port     = "80"
       protocol = "tcp"
+    },
+    {
+      port     = "443"
+      protocol = "tcp"
     }
   ]
   ingress_source = {
@@ -102,8 +106,8 @@ module "endpoint_sg" {
   vpc_id = aws_vpc.demo.id
 
   ingress_port_and_protocol = [{
-    port     = "-1"
-    protocol = "-1"
+    port     = "443"
+    protocol = "tcp"
   }]
   ingress_source = {
     cidr_ipv4 = aws_vpc.demo.cidr_block
