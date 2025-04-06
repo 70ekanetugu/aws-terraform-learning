@@ -42,4 +42,3 @@ WORKDIR /iac
 COPY .terraform-version .tflint.hcl .pre-commit-config.yaml ./
 
 RUN tenv tf install && \
-    tflint --init 
