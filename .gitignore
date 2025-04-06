@@ -1,3 +1,5 @@
+.DS_Store
+
 .devcontainer/
 .github/
 .terraform/
@@ -8,3 +10,11 @@
 *.tfstate
 *.tfstate.backup
 *.tfvars
+*.tfvars.json
+
+!dev.tfvars
+!stg.tfvars
+!peer.tfvars
+
+*/secrets/
+*.pem

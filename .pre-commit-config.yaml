@@ -17,4 +17,3 @@ repos:
           - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
           - --hook-config=--parallelism-ci-cpu-cores=1
         files: \.tf$
-    

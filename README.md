@@ -1,5 +1,8 @@
 # About
-Dockerコンテナ上でterraformを動かすためのプロジェクト。
+backend(tfstate)の管理をS3にしかつ環境ごとにわける構成のサンプル。  
+terraformでは `-backend-config` オプションでバックエンドの指定が可能であるため、これをつかって実現している。  
+-backend-configではkey-valueの形式であれば良いのでファイル名は任意( `*.tfbackend` や `*.config` がよく使われる)  
+入力については `-var-file` で切り替えるようにしている。  
 
 ## Tools
 主な使用ツールは以下の通り。  
@@ -92,24 +95,11 @@ terraform plan
 
 ## 実行
 ```shell
-terraform apply [-var-file="terraform.tfvarsのパス"]
+# 環境ごとの設定
+terraform init -reconfigure -backend-config="../environments/dev/state.config"
+# 適用(他planなども同様)
+terraform apply -var-file="./environments/dev/dev.tfvars"
 ```
-実際にaws上に適用するためのコマンド。
-`*.tf` の内容を変更して、AWSリソースの設定を更新する場合もこのコマンドを使う。
-このコマンドを実行すると実際にAWS上にリソースが作成・更新・削除されるため注意。
-
-オプションの-var-fileで入力を渡すこともできる。  
-なお、ルートのterraform.tfvarsは無条件で読み込まれるため指定は不要。
-environments/dev/terraform.tfvarsのように環境に応じた入力を用意する場合などで使用することが多い。
-
-## リソース削除
-```shell
-terraform destroy
-```
-AWSリソースを削除するためのコマンド。  
-ALBなど削除保護設定がされているリソースがあると失敗する。
-
-# ファイル構成
 
 
 

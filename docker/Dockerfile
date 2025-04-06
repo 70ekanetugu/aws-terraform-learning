@@ -11,7 +11,8 @@ WORKDIR /usr/local/src
 
 RUN apt-get update -y && \
     # curl, unzip, jq: インストールに必要, less: aws-cliコマンドで必要
-    apt-get install -y curl unzip jq less git mandoc pre-commit && \
+    apt-get install -y curl unzip jq less git mandoc pre-commit locales && \
+    locale-gen en_US.UTF-8 && \
     # aws-cliインストール
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
@@ -41,4 +42,3 @@ WORKDIR /iac
 COPY .terraform-version .tflint.hcl .pre-commit-config.yaml ./
 
 RUN tenv tf install && \
-    tflint --init     
