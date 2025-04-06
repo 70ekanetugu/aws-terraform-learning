@@ -1,3 +1,5 @@
+.DS_Store
+
 .devcontainer/
 .github/
 .terraform/
@@ -13,3 +15,6 @@
 !dev.tfvars
 !stg.tfvars
 !peer.tfvars
+
+*/secrets/
+*.pem
