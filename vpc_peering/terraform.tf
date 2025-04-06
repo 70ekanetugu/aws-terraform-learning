@@ -8,6 +8,11 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
   # 設定は${env}.tfbackendに移譲
   backend "s3" {

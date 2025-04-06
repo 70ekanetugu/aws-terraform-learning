@@ -36,10 +36,12 @@ resource "aws_subnet" "acceptor_other" {
   }
 }
 
-
 # =================================================================================
 # ルートテーブル
 # ================================================================================
+#
+# privateサブネット用のルートテーブル
+#
 resource "aws_route_table" "acceptor" {
   vpc_id = aws_vpc.acceptor.id
 
@@ -47,11 +49,17 @@ resource "aws_route_table" "acceptor" {
     Name = "${local.acceptor_name}-private-rtb"
   }
 }
-
 resource "aws_route_table_association" "acceptor" {
   subnet_id      = aws_subnet.acceptor.id
   route_table_id = aws_route_table.acceptor.id
-  #   depends_on = [aws_vpc_peering_connection.peering]
+
+  depends_on = [aws_vpc_peering_connection.peering]
+}
+resource "aws_route_table_association" "acceptor_other" {
+  subnet_id      = aws_subnet.acceptor_other.id
+  route_table_id = aws_route_table.acceptor.id
+
+  depends_on = [aws_vpc_peering_connection.peering]
 }
 
 # =================================================================================
@@ -60,18 +68,19 @@ resource "aws_route_table_association" "acceptor" {
 #
 # 踏み台からのSSH用
 #
-# module "sg_ssh" {
-#   source = "../modules/security_group"
-#   vpc_id = aws_vpc.requester.id
-#   name   = "${local.acceptor_name}-ssh"
-#   ingress_rule_by_cidr_block = [
-#     {
-#       cidr_ipv4 = aws_vpc.requester.cidr_block
-#       port     = "22"
-#       protocol = "tcp"
-#     }
-#   ]
-# }
+module "sg_ssh" {
+  source = "../modules/security_group"
+  vpc_id = aws_vpc.acceptor.id
+  name   = "${local.acceptor_name}-ssh"
+
+  ingress_rule_by_cidr_block = [
+    {
+      cidr_ipv4 = aws_vpc.requester.cidr_block
+      port      = "22"
+      protocol  = "tcp"
+    }
+  ]
+}
 
 #
 # DBアクセス用
@@ -82,15 +91,10 @@ module "sg_postgres" {
   name   = "${local.acceptor_name}-rds"
   ingress_rule_by_cidr_block = [
     {
-      cidr_ipv4 = aws_vpc.acceptor.cidr_block
+      cidr_ipv4 = aws_vpc.requester.cidr_block
       port      = "5432"
       protocol  = "tcp"
-    },
-    # {
-    #   cidr_ipv4 = aws_vpc.requester.cidr_block
-    #   port     = "5432"
-    #   protocol = "tcp"
-    # }
+    }
   ]
 }
 module "sg_mysql" {
@@ -99,17 +103,60 @@ module "sg_mysql" {
   name   = "${local.acceptor_name}-aurora"
   ingress_rule_by_cidr_block = [
     {
-      cidr_ipv4 = aws_vpc.acceptor.cidr_block
+      cidr_ipv4 = aws_vpc.requester.cidr_block
       port      = "3306"
       protocol  = "tcp"
-    },
-    # {
-    #   cidr_ipv4 = aws_vpc.requester.cidr_block
-    #   port     = "3306"
-    #   protocol = "tcp"
-    # }
+    }
   ]
 }
+
+# =================================================================================
+# Key pair
+# =================================================================================
+#
+# EC2用のSSH鍵ペア。踏み台サーバからacceptor側のEC2にログインするために使用する。
+#
+resource "tls_private_key" "rsa" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+resource "aws_key_pair" "ec2" {
+  key_name   = "${local.acceptor_name}-ec2"
+  public_key = tls_private_key.rsa.public_key_openssh
+
+  lifecycle {
+    ignore_changes = [key_name]
+  }
+}
+
+# =================================================================================
+# EC2
+# =================================================================================
+resource "aws_instance" "acceptor" {
+  ami                    = "ami-0b6e7ccaa7b93e898" # Amazon Linux 2
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.acceptor.id
+  vpc_security_group_ids = [module.sg_ssh.id]
+  key_name               = aws_key_pair.ec2.key_name
+
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size           = 20
+    delete_on_termination = true
+    encrypted             = true
+    iops                  = 3000
+    throughput            = 125
+
+    tags = {
+      Name = "${local.acceptor_name}-ec2-volume"
+    }
+  }
+
+  tags = {
+    Name = "${local.acceptor_name}-ec2"
+  }
+}
+
 
 # =================================================================================
 # DB
@@ -133,7 +180,7 @@ resource "aws_db_instance" "psql" {
   storage_type           = "gp2"
   db_subnet_group_name   = aws_db_subnet_group.psql.name
   username               = "postgres"
-  password               = "password"
+  password               = "postgresPassword!"
   db_name                = "sample"
   vpc_security_group_ids = [module.sg_postgres.id]
   multi_az               = false
@@ -144,7 +191,6 @@ resource "aws_db_instance" "psql" {
     Name = "${local.acceptor_name}-psql"
   }
 }
-
 #
 # Aurora for mysql
 #

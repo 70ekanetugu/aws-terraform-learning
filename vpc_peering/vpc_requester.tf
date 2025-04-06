@@ -2,6 +2,9 @@ locals {
   requester_name = "kanetugu-requester"
 }
 
+# =================================================================================
+# ネットワーク
+# =================================================================================
 #
 # SessionManagerでアクセスする用のVPC
 #
@@ -14,7 +17,21 @@ resource "aws_vpc" "requester" {
     Name = "${local.requester_name}-vpc"
   }
 }
+#
+# NAT設置用のpublicサブネット(踏み台->ネットワークアクセスのために用意。逆方向は許可しない)
+#
+resource "aws_subnet" "public" {
+  availability_zone = "${var.region}a"
+  cidr_block        = "${var.requester_cidr_block_prefix}.100.0/24"
+  vpc_id            = aws_vpc.requester.id
 
+  tags = {
+    Name = "${local.requester_name}-public"
+  }
+}
+#
+# 踏み台サーバ用のprivateサブネット
+#
 resource "aws_subnet" "requester" {
   availability_zone = "ap-northeast-1a"
   cidr_block        = "${var.requester_cidr_block_prefix}.0.0/24"
@@ -25,6 +42,66 @@ resource "aws_subnet" "requester" {
   }
 }
 
+# =================================================================================
+# ゲートウェイ(IGW, NAT-GW)
+# ================================================================================
+#
+# IGW
+#
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.requester.id
+
+  tags = {
+    Name = "${local.requester_name}-igw"
+  }
+}
+#
+# NAT gateway
+#
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
+
+  tags = {
+    Name = "${local.requester_name}-nat"
+  }
+
+  depends_on = [aws_eip.nat]
+}
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${local.requester_name}-nat-eip"
+  }
+}
+
+# ==================================================================================
+# ルートテーブル
+# =================================================================================
+#
+# publicサブネット用のルートテーブル
+#
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.requester.id
+
+  tags = {
+    Name = "${local.requester_name}-public-rtb"
+  }
+}
+resource "aws_route" "public" {
+  route_table_id         = aws_route_table.public.id
+  gateway_id             = aws_internet_gateway.igw.id
+  destination_cidr_block = "0.0.0.0/0"
+}
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
+}
+
+#
+# privateサブネット用のルートテーブル
+#
 resource "aws_route_table" "requester" {
   vpc_id = aws_vpc.requester.id
 
@@ -32,11 +109,16 @@ resource "aws_route_table" "requester" {
     Name = "${local.requester_name}-private-rtb"
   }
 }
-
+resource "aws_route" "private" {
+  route_table_id         = aws_route_table.requester.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat.id
+}
 resource "aws_route_table_association" "requester" {
   subnet_id      = aws_subnet.requester.id
   route_table_id = aws_route_table.requester.id
-  # depends_on = [aws_vpc_peering_connection.peering]
+
+  depends_on = [aws_vpc_peering_connection.peering]
 }
 
 # =================================================================================
@@ -45,10 +127,25 @@ resource "aws_route_table_association" "requester" {
 # 
 # VPCエンドポイント用
 #
-module "sg_https" {
+module "sg_vpc_endpoint" {
   source = "../modules/security_group"
   vpc_id = aws_vpc.requester.id
   name   = "${local.requester_name}-sg"
+  ingress_rule_by_cidr_block = [
+    {
+      cidr_ipv4 = aws_vpc.requester.cidr_block
+      port      = "443"
+      protocol  = "tcp"
+    }
+  ]
+}
+#
+# EC2, ECS用
+#
+module "sg_compute" {
+  source = "../modules/security_group"
+  vpc_id = aws_vpc.requester.id
+  name   = "${local.requester_name}-ec2-sg"
   ingress_rule_by_cidr_block = [
     {
       cidr_ipv4 = aws_vpc.requester.cidr_block
@@ -68,7 +165,7 @@ resource "aws_vpc_endpoint" "ec2messages" {
   vpc_id              = aws_vpc.requester.id
   service_name        = "com.amazonaws.${var.region}.ec2messages"
   vpc_endpoint_type   = "Interface"
-  security_group_ids  = [module.sg_https.id]
+  security_group_ids  = [module.sg_vpc_endpoint.id]
   subnet_ids          = [aws_subnet.requester.id]
   private_dns_enabled = true
 
@@ -80,7 +177,7 @@ resource "aws_vpc_endpoint" "ssm" {
   vpc_id              = aws_vpc.requester.id
   service_name        = "com.amazonaws.${var.region}.ssm"
   vpc_endpoint_type   = "Interface"
-  security_group_ids  = [module.sg_https.id]
+  security_group_ids  = [module.sg_vpc_endpoint.id]
   subnet_ids          = [aws_subnet.requester.id]
   private_dns_enabled = true
 
@@ -92,7 +189,7 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   vpc_id              = aws_vpc.requester.id
   service_name        = "com.amazonaws.${var.region}.ssmmessages"
   vpc_endpoint_type   = "Interface"
-  security_group_ids  = [module.sg_https.id]
+  security_group_ids  = [module.sg_vpc_endpoint.id]
   subnet_ids          = [aws_subnet.requester.id]
   private_dns_enabled = true
 
@@ -165,8 +262,9 @@ resource "aws_instance" "bastion" {
   ami                    = "ami-0b6e7ccaa7b93e898"
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.requester.id
-  vpc_security_group_ids = [module.sg_https.id]
+  vpc_security_group_ids = [module.sg_compute.id]
   iam_instance_profile   = module.role_for_bastion.iam_instance_profile.id
+  user_data              = file("./scripts/bastion_setup.sh")
 
   root_block_device {
     volume_type           = "gp3"
