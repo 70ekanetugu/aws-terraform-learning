@@ -12,3 +12,4 @@
 
 !dev.tfvars
 !stg.tfvars
+!peer.tfvars
